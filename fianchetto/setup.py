@@ -10,7 +10,7 @@ setup(
     version="1.0.0",
     description="chess server on top of guillotina",
     long_description=README,
-    install_requires=["guillotina"],
+    install_requires=["guillotina", "python-chess"],
     author="",
     author_email="",
     url="",
