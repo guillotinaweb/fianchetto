@@ -15,7 +15,10 @@ logger = logging.getLogger("fianchetto")
 
 
 @configure.service(
-    context=IChessGame, method="POST", name="@play", permission="fianchetto.PlayGame"
+    context=IChessGame,
+    method="POST",
+    name="@play",
+    permission="fianchetto.PlayGame",
 )
 async def play_chess_game(context, request):
     ws = web.WebSocketResponse()
@@ -33,7 +36,9 @@ async def play_chess_game(context, request):
                 pass
             elif msg.tp == aiohttp.WSMsgType.error:
                 logger.debug(
-                    "ws connection closed with exception {0:s}".format(ws.exception())
+                    "ws connection closed with exception {0:s}".format(
+                        ws.exception()
+                    )
                 )
     except (RuntimeError, asyncio.CancelledError):
         pass

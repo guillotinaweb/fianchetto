@@ -20,7 +20,9 @@ class fianchetto_Requester(ContainerRequesterAsyncContextManager):  # noqa
     async def __aenter__(self):
         await super().__aenter__()
         resp = await self.requester(
-            "POST", "/db/guillotina/@addons", data=json.dumps({"id": "fianchetto"})
+            "POST",
+            "/db/guillotina/@addons",
+            data=json.dumps({"id": "fianchetto"}),
         )
         return self.requester
 
