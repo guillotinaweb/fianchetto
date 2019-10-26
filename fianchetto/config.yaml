@@ -1,6 +1,7 @@
 ---
 applications:
-  - { { cookiecutter.package_name } }
+  - fianchetto
+  - guillotina.contrib.dbusers
   - guillotina.contrib.catalog.pg
   - guillotina.contrib.swagger
 databases:

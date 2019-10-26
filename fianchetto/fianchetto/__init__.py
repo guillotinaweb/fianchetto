@@ -10,5 +10,6 @@ def includeme(root):
     """
     custom application initialization here
     """
-    configure.scan('fianchetto.api')
-    configure.scan('fianchetto.install')
+    configure.scan("fianchetto.api")
+    configure.scan("fianchetto.install")
+    configure.scan("fianchetto.content")
