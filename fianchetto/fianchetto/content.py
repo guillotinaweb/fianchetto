@@ -5,9 +5,12 @@ from guillotina.interfaces import IFolder
 
 class IChessGame(IFolder):
 
-    index_field("users", type="keyword")
+    index_field("white", type="keyword")
     white = schema.TextLine(title="White player", required=False)
+
+    index_field("black", type="keyword")
     black = schema.TextLine(title="Black player", required=False)
+
     moves = schema.List(value_type=schema.TextLine(), default=list())
 
 
