@@ -4,11 +4,8 @@ from guillotina.addons import Addon
 from guillotina.utils import get_registry
 
 
-@configure.addon(
-    name="fianchetto",
-    title="chess server on top of guillotina")
+@configure.addon(name="fianchetto", title="chess server on top of guillotina")
 class ManageAddon(Addon):
-
     @classmethod
     async def install(cls, container, request):
         registry = await get_registry(container)  # noqa
