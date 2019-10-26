@@ -1,7 +1,10 @@
 import chess
 from guillotina import configure, content, schema
+from guillotina.component import get_utility
 from guillotina.directives import index_field
-from guillotina.interfaces import IFolder
+from guillotina.interfaces import IFolder, IObjectAddedEvent
+
+from .interfaces import IChessServerManager
 
 
 class IChessGame(IFolder):
@@ -33,4 +36,25 @@ class ChessGame(content.Folder):
                 board.push(move_obj)
             else:
                 return False
-        return True
+
+    @property
+    def turn(self):
+        """Compute who's turn is it depending on the number of moves that
+        have been done.
+        """
+        if len(self.moves or []) % 2 == 0:
+            return "white"
+        return "black"
+
+    def get_side(self, player_id):
+        if self.white == player_id:
+            return "white"
+        elif self.black == player_id:
+            return "black"
+        raise Exception()
+
+
+@configure.subscriber(for_=(IChessGame, IObjectAddedEvent))
+async def initialize_game(obj, evnt):
+    utility = get_utility(IChessServerManager)
+    utility.initialize_game(obj)
