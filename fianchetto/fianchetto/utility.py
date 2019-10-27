@@ -38,25 +38,35 @@ class ChessServerManager:
     def register_player(
         self, ws, game: IChessGame, player_id: str, side="white"
     ):
-        if game.id not in self._gamechannels:
+        if game.id not in self._gamechannels.keys():
             self.initialize_game(game)
 
         self._gamechannels[game.id][side]["ws"] = ws
         self._gamechannels[game.id][side]["user_id"] = player_id
 
         # Schedule the function that
-        asyncio.ensure_future(self.handle_game)
+        asyncio.ensure_future(self.handle_game(game.id))
 
     def unregister_player(self, game: IChessGame, player_id, side):
         # Player left the game, so we just remove the websocket
         self._gamechannels[game.id][side].pop("ws", None)
 
+    def _get_all_ws_game(self, game_id: str):
+        ws = []
+        if self._gamechannels["black"].get("ws", None):
+            ws.append(self._gamechannels["black"]["ws"])
+        if self._gamechannels["white"].get("ws", None):
+            ws.append(self._gamechannels["black"]["ws"]
+        ws.extend(self._gamechannels["observers"])
+
+        return ws
+
     async def finalize(self):
         pass
 
-    async def queue_move(self, game: IChessGame, move_message: str, side: str):
+    async def queue_move(self, game: IChessGame, game_status: dict):
         queue = self._gamechannels[game.id]["queue"]
-        message = {"side": side, "move": move_message}
+        message = {"status": game_status}
         await queue.put(message)
 
     async def handle_game(self, game_id):
@@ -64,18 +74,12 @@ class ChessServerManager:
         queue = self._gamechannels[game_id]["queue"]
         while True:
             try:
-                # Get new message
+                # Get new message from the queue
                 message = await asyncio.wait_for(queue.get(), 0.2)
-                # Handle new message in a queue
-                move_side = message["side"]
 
-                opponent_side = "black" if move_side == "white" else "white"
-                opponent_ws = self._gamechannels[game_id][opponent_side]["ws"]
-                observer_ws = self._gamechannels[game_id]["observers"]
-
-                # Send notification to opponent and all observers
-                for ws in [opponent_ws] + observer_ws:
-                    await ws.send_str(json.dumps(message))
+                # Send message to all ws connected to a game
+                for ws in self._get_all_ws_game(game_id):
+                    await ws.send_str(message)
 
             except (
                 RuntimeError,
