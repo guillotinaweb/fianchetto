@@ -56,7 +56,7 @@ class ChessServerManager:
         if self._gamechannels["black"].get("ws", None):
             ws.append(self._gamechannels["black"]["ws"])
         if self._gamechannels["white"].get("ws", None):
-            ws.append(self._gamechannels["black"]["ws"]
+            ws.append(self._gamechannels["black"]["ws"])
         ws.extend(self._gamechannels["observers"])
 
         return ws
