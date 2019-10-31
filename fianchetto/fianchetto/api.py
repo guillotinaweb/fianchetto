@@ -53,3 +53,40 @@ async def play_chess_game(context, request):
         utility.unregister_player(context, player_id, "white")
 
     return {}
+
+@configure.service(
+    context=IChessGame,
+    method="GET",
+    name="@simple",
+    permission="fianchetto.PlayGame",
+    allow_access=True,
+)
+async def simple_chessboard(context, request):
+    """ This is a purposefully simple endpoint to demonstrate websockets.
+        It is configured to rebroadcast incoming messagse to every client
+        connected to the game.
+    """
+    ws = web.WebSocketResponse()
+    utility = get_utility(IChessServerManager)
+    utility.simple_chessboard_ws(ws, request, game=context)
+    tm = get_tm()
+    await tm.abort()
+    await ws.prepare(request)
+    try:
+        async for message in ws:
+            if message.type == aiohttp.WSMsgType.text:
+                # This is where incoming messages are handled. 
+                # This simple example just rebroadcasts incoming messages.
+                await utility.broadcast_incoming_message(game=context, 
+                                                         message=message)
+            elif message.type == aiohttp.WSMsgType.error:
+                logger.debug(
+                    "ws connection closed with exception {0:s}".format(
+                        ws.exception()
+                    )
+                )
+    except (RuntimeError, asyncio.CancelledError):
+        pass
+    finally:
+        logger.debug("websocket connection closed")
+    return {}

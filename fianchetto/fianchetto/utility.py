@@ -17,6 +17,41 @@ class ChessServerManager:
         self._settings = {}
         self._gamechannels: dict = {}
 
+    def simple_chessboard_ws(self, ws, request, game: IChessGame):
+        if game.id not in self._gamechannels:
+            self.init_simple_chessboard(game=game)
+        self._gamechannels[game.id]['sockets'].append(ws)
+    
+    def init_simple_chessboard(self, game: IChessGame):
+        self._gamechannels[game.id] = {
+            "queue": asyncio.Queue(),
+            "sockets": [],
+        }
+        asyncio.create_task(self.handle_messages(game))
+
+    async def handle_messages(self, game: IChessGame):
+        while True:
+            try:
+                # Send new messages to ws
+                message = await asyncio.wait_for(
+                    self._gamechannels[game.id]['queue'].get(), 0.2)
+                for ws in self._gamechannels[game.id]['sockets']:
+                    await ws.send_str(json.dumps(message))
+
+            except (
+                RuntimeError,
+                asyncio.CancelledError,
+                asyncio.TimeoutError,
+            ):
+                pass
+
+            except Exception:
+                logger.warning("Error sending message", exc_info=True)
+                await asyncio.sleep(1)
+
+    async def broadcast_incoming_message(self, game: IChessGame, message):
+        await self._gamechannels[game.id]['queue'].put(message)
+
     def register_game(self, game: IChessGame):
         self._gamechannels[game.id] = {
             "white": None,
